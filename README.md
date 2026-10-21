@@ -20,6 +20,10 @@ Alternatively, download the three files together and open `index.html` locally. 
 - Use **42 repetitions** for a quick lecturer demonstration of variability among 42 independent founder events. It is *not* a live linked experiment collecting 42 browser sessions.
 - Optional: enter the same reproducibility seed to repeat identical results for troubleshooting. Students should use different seeds or leave the field blank for independent trials.
 
+## Allele interactions guide
+
+The page now includes a prominent **How do the alleles interact?** section before the population displays. It illustrates all six genotype–phenotype combinations, random transmission of parental alleles, why a heterozygote contributes to two allele counts, and why neutral drift is not natural selection. To update an existing GitHub Pages repository, replace `index.html` and `style.css` and commit; `app.js` remains unchanged.
+
 ## Scientific implementation
 
 - Each individual is diploid with two alleles selected from Y, B, R. Incomplete dominance maps YB to green, YR to orange, and BR to purple.
