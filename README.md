@@ -10,17 +10,17 @@ Upload **all files in this directory** (not the ZIP itself) to the root of a Git
 
 The panels are ordered as: **Three ways chance changes populations → How do alleles interact? → Simulation settings → Populations → Graph → Student practical**.
 
-### Ten-run student practical (v1.5)
+### Ten-run student practical
 
-1. Set Island 1 founders to **5** and keep population capacities consistent.
-2. Select **Setup / reset**, optionally warm up the mainland as instructed, then **Colonise Island 1**.
-3. Click **Advance to generation +100** (100 generations after colonisation, not global generation 100).
-4. Click **Record result**. It stores current FINAL mainland and island allele frequencies, not founding values. Manual stepping is also allowed but recording requires exactly 100 generations after colonisation.
-5. Reset and repeat for **ten independent runs**. Export CSV; the table and CSV contain final generation count and six raw allele frequencies, but no student calculations.
+1. Set founders for Island 1 to **5**.
+2. Select **Setup / reset**. Optionally step through a fixed number of generations before colonisation.
+3. Select **Colonise Island 1** and, **before advancing again**, select **Record result**.
+4. Repeat from Setup / reset until ten rows are saved.
+5. Download the student CSV containing *only* mainland and island frequencies for Y, B, R (plus run and student ID). Students compute allele loss and differences in their own worksheet.
 
-Results are saved in the student's browser local storage and not collected centrally. Clear results to start another class/session.
+Use **Undo last result** if a mistake is made. Repeated recording of the same colonisation would not constitute independent runs; reset between runs. The app checks that frequencies are taken immediately after colonisation with five founders, but does not independently verify a reset between records.
 
-The optional 42-event lecturer demonstration now also evolves each island/mainland pair for 100 generations before recording final frequencies.
+A collapsible lecturer demonstration generates 42 independent founder events and exports only raw values. It does not collect student data automatically.
 
 ## Model assumptions
 
@@ -29,16 +29,3 @@ Neutral diploid inheritance, random mating, random reproductive sampling, no sel
 ## Technical
 
 `index.html`, `style.css`, and `app.js` must be in the same directory. Everything runs locally inside the browser. Data are not uploaded to any server.
-
-
-### Version 1.3 — visible student results
-After each successful **Record result**, the six raw allele frequencies appear in the on-page table. The same values are exported to the CSV. The on-page table now retains results across normal page refreshes in the same browser (browser local storage); this is not an online central collection system. Use **Clear recorded results** before starting a new student's session on a shared computer.
-
-
-## v1.4 recording fix
-The five-founder allele-frequency snapshot is captured immediately on Colonise Island 1 and subsequently recorded by Record result, even when the island population grows. Results are stored locally in the browser and exported as raw CSV; no allele-loss calculations are given.
-
-
-## v1.6 recording improvement
-
-After reset and colonisation with five founders, click **Record final result**. The application automatically advances to 100 generations after colonisation, records current final mainland and Island 1 frequencies, and displays them in the on-page results table. The 10-run results can be exported to CSV. The button also works after manually advancing fewer than 100 generations. Students calculate allele loss and frequency differences themselves.
