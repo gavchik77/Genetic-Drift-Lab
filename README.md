@@ -42,3 +42,8 @@ The five-founder allele-frequency snapshot is captured immediately on Colonise I
 ## v1.6 recording improvement
 
 After reset and colonisation with five founders, click **Record final result**. The application automatically advances to 100 generations after colonisation, records current final mainland and Island 1 frequencies, and displays them in the on-page results table. The 10-run results can be exported to CSV. The button also works after manually advancing fewer than 100 generations. Students calculate allele loss and frequency differences themselves.
+
+
+## Version 1.7 — simplified student recording
+
+The ten-run practical is independent of the free-play controls. Each press of **Record next run** starts a fresh random mainland, draws exactly five founders for Island 1, evolves both populations for 100 generations, and immediately appends the six final allele frequencies to the displayed table. Ten clicks yield ten runs and a downloadable CSV. Students calculate differences and allele loss themselves. The 42-run demonstration and interactive main simulation remain available.

@@ -42,7 +42,7 @@ function showRecorded(){
    const tr=document.createElement('tr');
    for(const value of [t.run,t.elapsed,...t.m,...t.p]){
      const td=document.createElement('td');
-     td.textContent=typeof value==='number'&& !Number.isInteger(value) ? value.toFixed(3) : String(value);
+     td.textContent=tr.children.length>=2 && typeof value==='number' ? value.toFixed(3) : String(value);
      tr.appendChild(td);
    }
    fragment.appendChild(tr);
@@ -52,11 +52,12 @@ function showRecorded(){
  $('trialMessage').textContent=recordedRuns.length+' of 10 results recorded. '+(recordedRuns.length===10?'All ten runs recorded: download your data.':'Reset the simulation for the next independent run.');
  $('recordTrial').disabled=recordedRuns.length>=10;
  $('recordCount').textContent=recordedRuns.length+' / 10';
- try{localStorage.setItem('genetic-drift-student-records-v16',JSON.stringify(recordedRuns));}catch(e){}
+ $('recordTrial').textContent=recordedRuns.length<10?'＋ Record next run ('+(recordedRuns.length+1)+' of 10)':'All 10 runs recorded';
+ try{localStorage.setItem('genetic-drift-student-records-v17',JSON.stringify(recordedRuns));}catch(e){}
 }
 function restoreRecorded(){
  try{
-   const saved=JSON.parse(localStorage.getItem('genetic-drift-student-records-v16')||'[]');
+   const saved=JSON.parse(localStorage.getItem('genetic-drift-student-records-v17')||'[]');
    if(Array.isArray(saved)) for(const row of saved.slice(0,10)){
      if(Array.isArray(row.m)&&row.m.length===3&&Array.isArray(row.p)&&row.p.length===3&&[...row.m,...row.p].every(v=>typeof v==='number'&&Number.isFinite(v)))recordedRuns.push({run:recordedRuns.length+1,elapsed:row.elapsed??100,m:row.m,p:row.p});
    }
@@ -73,25 +74,31 @@ function advanceToObservation(){
  $('trialMessage').textContent='Ready to record: 100 generations after founding. Select Record result.';
 }
 function recordTrial(){
- if(recordedRuns.length>=10){$('trialMessage').textContent='All ten runs have been recorded. Download the CSV, or clear results to start again.';return}
- if(!foundingSnapshot||!pop[1].length){$('trialMessage').textContent='First select Setup / reset, then Colonise Island 1 with five founders.';return}
- if(foundingSnapshot.event===lastRecordedEvent){$('trialMessage').textContent='Already recorded this founding event. Select Setup / reset and colonise again for another independent run.';return}
- if(foundingSnapshot.founders!==5){$('trialMessage').textContent='This run used '+foundingSnapshot.founders+' founders rather than five. Reset and found Island 1 with five.';return}
- const elapsed=generation-foundingSnapshot.generation;
- if(elapsed>OBSERVATION_GENERATIONS){$('trialMessage').textContent='This run has passed 100 generations since colonisation ('+elapsed+'). Reset and start a new run.';return}
- // Auto-finish the remaining generations so Record result always records the intended final state.
+ // Each click creates one independent, controlled experiment.
+ // This avoids confusing recording prerequisites while preserving the free-play simulation above.
+ if(recordedRuns.length>=10){$('trialMessage').textContent='All ten runs recorded. Download your CSV or clear the table.';return;}
  stop();
- for(let i=elapsed;i<OBSERVATION_GENERATIONS;i++)tick(true);
- draw();
- const finalElapsed=generation-foundingSnapshot.generation;
- recordedRuns.push({run:recordedRuns.length+1,elapsed:finalElapsed,m:countAlleles(pop[0]).slice(),p:countAlleles(pop[1]).slice()});
- lastRecordedEvent=foundingSnapshot.event;
+ const mainlandSize=Math.max(5,num('mainK'));
+ const islandSize=num('isle1K');
+ let mainland=initialPop(mainlandSize);
+ // Founder event: sample exactly five diploid individuals from a new mainland.
+ let island=sampleWithoutReplacement(mainland,5);
+ const foundingMain=countAlleles(mainland).slice();
+ const foundingIsland=countAlleles(island).slice();
+ for(let g=0;g<OBSERVATION_GENERATIONS;g++){
+   mainland=reproduce(mainland,mainlandSize);
+   island=reproduce(island,islandSize);
+ }
+ recordedRuns.push({run:recordedRuns.length+1,elapsed:OBSERVATION_GENERATIONS,
+   m:countAlleles(mainland).slice(),p:countAlleles(island).slice(),
+   foundingMain,foundingIsland});
  showRecorded();
- $('trialMessage').textContent='Saved run '+recordedRuns.length+' / 10 at '+finalElapsed+' generations after founding. Select Setup / reset and colonise again.';
+ $('trialMessage').textContent='Run '+recordedRuns.length+' / 10 saved. Final mainland and Island 1 frequencies are shown below.';
+ $('trialRows').lastElementChild?.scrollIntoView({block:'nearest',behavior:'instant'});
 }
 function rawRows(runs){return [['Student ID','Run','Generations after founding','Mainland Y','Mainland B','Mainland R','Island Y','Island B','Island R'],...runs.map(t=>[safeStudent(),t.run,t.elapsed,...t.m.map(x=>x.toFixed(6)),...t.p.map(x=>x.toFixed(6))])]}
 
 function runClass(){stop();const previous=rng,seedText=$('seed').value.trim(),warmup=num('warmup',0,1000),K=num('mainK');if(K<5){setStatus('Mainland carrying capacity must be at least 5.');return}try{if(seedText)rng=seededRandom(hashSeed(seedText));classTrials=[];for(let i=1;i<=42;i++){let mainland=initialPop(K);for(let g=0;g<warmup;g++)mainland=reproduce(mainland,K);let island=sampleWithoutReplacement(mainland,5);for(let g=0;g<OBSERVATION_GENERATIONS;g++){mainland=reproduce(mainland,K);island=reproduce(island,num('isle1K'))}classTrials.push({run:i,elapsed:OBSERVATION_GENERATIONS,m:countAlleles(mainland),p:countAlleles(island)})}}finally{rng=previous}
  $('classRows').innerHTML=classTrials.map(t=>'<tr><td>'+t.run+'</td><td>'+t.elapsed+'</td>'+t.m.concat(t.p).map(v=>'<td>'+v.toFixed(3)+'</td>').join('')+'</tr>').join('');$('downloadClass').disabled=false;setStatus('Generated 42 independent populations evolved for 100 generations after founding (raw final frequencies only).')}
-$('setup').addEventListener('click',setup);$('step').addEventListener('click',()=>{stop();tick()});$('go').addEventListener('click',()=>{if(timer!==null){stop();return}timer=setInterval(tick,Number($('speed').value));$('go').textContent='⏸ Pause';setStatus('Simulation running.')});$('speed').addEventListener('change',()=>{if(timer!==null){stop();timer=setInterval(tick,Number($('speed').value));$('go').textContent='⏸ Pause'}});$('colonize1').addEventListener('click',()=>colonize(1,0,'found1'));$('colonize2').addEventListener('click',()=>colonize(2,1,'found2'));$('bottleneck').addEventListener('click',bottleneck);$('clear1').addEventListener('click',()=>clearIsland(1));$('clear2').addEventListener('click',()=>clearIsland(2));$('graphPop').addEventListener('change',drawChart);$('recordTrial').addEventListener('click',recordTrial);$('advanceTrial').addEventListener('click',advanceToObservation);$('undoTrial').addEventListener('click',()=>{recordedRuns.pop();showRecorded()});$('clearTrials').addEventListener('click',()=>{if(recordedRuns.length&&!confirm('Clear all recorded student results?'))return;recordedRuns.length=0;showRecorded()});$('downloadTrials').addEventListener('click',()=>{if(recordedRuns.length)exportCSV('founder_effect_'+safeStudent()+'_raw.csv',rawRows(recordedRuns))});$('runClass').addEventListener('click',runClass);$('downloadClass').addEventListener('click',()=>{if(classTrials.length)exportCSV('founder_effect_42_demo_raw.csv',rawRows(classTrials))});$('exportHistory').addEventListener('click',()=>{const rows=[['Generation','Population','Individuals','Y','B','R']];histories.forEach((h,i)=>h.forEach(t=>rows.push([t.g,['Mainland','Island 1','Island 2'][i],t.n,...t.p.map(x=>x.toFixed(6))])));exportCSV('allele_history_'+safeStudent()+'.csv',rows)});
+$('setup').addEventListener('click',setup);$('step').addEventListener('click',()=>{stop();tick()});$('go').addEventListener('click',()=>{if(timer!==null){stop();return}timer=setInterval(tick,Number($('speed').value));$('go').textContent='⏸ Pause';setStatus('Simulation running.')});$('speed').addEventListener('change',()=>{if(timer!==null){stop();timer=setInterval(tick,Number($('speed').value));$('go').textContent='⏸ Pause'}});$('colonize1').addEventListener('click',()=>colonize(1,0,'found1'));$('colonize2').addEventListener('click',()=>colonize(2,1,'found2'));$('bottleneck').addEventListener('click',bottleneck);$('clear1').addEventListener('click',()=>clearIsland(1));$('clear2').addEventListener('click',()=>clearIsland(2));$('graphPop').addEventListener('change',drawChart);$('recordTrial').addEventListener('click',recordTrial);$('undoTrial').addEventListener('click',()=>{recordedRuns.pop();showRecorded()});$('clearTrials').addEventListener('click',()=>{if(recordedRuns.length&&!confirm('Clear all recorded student results?'))return;recordedRuns.length=0;showRecorded()});$('downloadTrials').addEventListener('click',()=>{if(recordedRuns.length)exportCSV('founder_effect_'+safeStudent()+'_raw.csv',rawRows(recordedRuns))});$('runClass').addEventListener('click',runClass);$('downloadClass').addEventListener('click',()=>{if(classTrials.length)exportCSV('founder_effect_42_demo_raw.csv',rawRows(classTrials))});$('exportHistory').addEventListener('click',()=>{const rows=[['Generation','Population','Individuals','Y','B','R']];histories.forEach((h,i)=>h.forEach(t=>rows.push([t.g,['Mainland','Island 1','Island 2'][i],t.n,...t.p.map(x=>x.toFixed(6))])));exportCSV('allele_history_'+safeStudent()+'.csv',rows)});
 setup();restoreRecorded();
