@@ -29,3 +29,7 @@
 #trialRows td{font-variant-numeric:tabular-nums;color:#132b35;font-weight:600}
 #trialRows td:nth-child(n+5){background:rgba(17,117,138,.065)}
 .run-count{font-size:15px;margin-left:10px;padding:5px 10px;border-radius:20px;background:#e4f3ef;color:#146252;white-space:nowrap}
+
+/* v1.8: responsive diagrams in the introductory concepts */
+.concept-illustration{display:block;width:100%;height:auto;max-width:480px;margin:4px auto 12px;border-radius:10px;background:white;border:1px solid #e4eaed}
+.concept-grid article{min-width:0}
